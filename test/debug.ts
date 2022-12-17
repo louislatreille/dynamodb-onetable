@@ -5,60 +5,44 @@
 
     Or run VS Code in the top level directory and just run.
  */
-import {AWS, Client, Entity, Match, Model, Table, print, dump, delay} from './utils/init'
-import { OneSchema } from '../src/index.js'
+import {Entity, Table} from './utils/init'
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 jest.setTimeout(7200 * 1000)
 
 //  Change with your schema
 const schema = {
-    version: '0.0.1',
+    format: "onetable:1.1.0",
+    version: "1.0.0",
     indexes: {
-        primary: { hash: 'pk', sort: 'sk' },
-        gs1: { hash: 'gs1pk', sort: 'gs1sk', project: 'all' },
+      primary: { hash: "pk", sort: "sk" },
     },
     models: {
-        User: {
-            pk:         { type: 'string', value: '${_type}#' },
-            sk:         { type: 'string', value: '${_type}#${id}' },
-
-            gs1pk:      { type: 'string', value: '${_type}#' },
-            gs1sk:      { type: 'string', value: '${_type}#${id}' },
-
-            name:       { type: 'string' },
-            email:      { type: 'string' },
-            id:         { type: 'string', generate: 'ulid' },
-        }
-    } as const
-}
+      user: {
+        pk: { type: String, value: "U#${userId}" },
+        sk: { type: String, value: "-" },
+        userId: { type: String, required: true },
+        username: { type: String, required: true },
+      },
+    } as const,
+  };
 
 //  Change your table params as required
 const table = new Table({
-    name: 'DebugTable',
-    client: Client,
-    partial: false,
+    name: 'oneTableTest',
+    client: new DynamoDBClient({ region: "us-east-1" }),
+    partial: true,
     schema,
     logger: true,
 })
 
-//  This will create a local table
-test('Create Table', async() => {
-    if (!(await table.exists())) {
-        await table.createTable()
-        expect(await table.exists()).toBe(true)
-    }
-})
+type UserItem = Entity<typeof schema.models.user>;
 
 test('Test', async() => {
-    /*
-    Put your code here
+    const userModel = table.getModel<UserItem>("user");
 
-    let User = table.getModel('User')
-    let users = await User.find({})
-*/
-})
-
-test('Destroy Table', async() => {
-    await table.deleteTable('DeleteTableForever')
-    expect(await table.exists()).toBe(false)
+    await userModel.create({
+      userId: "testUser",
+      username: "testUserName",
+    });
 })

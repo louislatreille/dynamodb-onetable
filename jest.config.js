@@ -24,8 +24,6 @@ module.exports = {
         "!**/schemas/*",
         "!**/proto.ts"
     ],
-    globalSetup: '<rootDir>/test/utils/setup.ts',
-    globalTeardown: '<rootDir>/test/utils/teardown.ts',
     testEnvironment: "node",
     resetMocks: true,
     transform: {
